@@ -43,11 +43,13 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|unique:users,email',
+            'phone' => 'required',
             'password' => 'required'
         ]);
         $usuario = new User();
         $usuario->name  = $request->name;
         $usuario->email = $request->email;
+        $usuario->phone = $request->phone;
         $usuario->password = bcrypt($request->password);
         $usuario->save();
 
@@ -59,11 +61,13 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string',
             'password' => 'required|string|min:8',
         ]);
         $user = User::create([
             'name' => $request->input('name'),
             'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
             'password' => Hash::make($request->input('password')),
         ]);
         // $mensaje = "usuario creado exitosamente!!";

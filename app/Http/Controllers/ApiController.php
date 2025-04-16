@@ -25,18 +25,20 @@ class ApiController extends Controller
     }
     public function crear(Request $request)
     {
-        $request ->validate([
+        $request->validate([
             'name' => 'required',
             'email' => 'required|unique:users,email',
+            'phone' => 'required',
             'password' => 'required'
         ]);
         $usuario = new User();
         $usuario->name  = $request->name;
         $usuario->email = $request->email;
+        $usuario->phone = $request->phone;
         $usuario->password = bcrypt($request->password);
         $usuario->save();
 
-        $mensaje = "usuario creado exitosamente!!"; 
+        $mensaje = "usuario creado exitosamente!!";
         return json_encode($mensaje);
     }
 }

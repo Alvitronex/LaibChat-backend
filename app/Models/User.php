@@ -20,6 +20,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
     ];
 
@@ -39,10 +40,13 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
+        'phone' => 'string', // Añade esta línea para asegurar que phone se maneje como string
+
         'email_verified_at' => 'datetime',
+
         'password' => 'hashed',
     ];
-    
+
     /**
      * Obtener todas las conversaciones a las que pertenece el usuario.
      */
@@ -51,7 +55,7 @@ class User extends Authenticatable
         return $this->belongsToMany(Conversation::class, 'conversation_user')
             ->withTimestamps();
     }
-    
+
     /**
      * Obtener todos los mensajes enviados por el usuario.
      */
