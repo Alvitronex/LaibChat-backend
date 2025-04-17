@@ -27,13 +27,13 @@ class ChatController extends Controller
     public function getMessages($conversationId)
     {
         $user = Auth::user();
-        
+
         // Verificar que el usuario pertenezca a la conversación
         $conversation = $user->conversations()->findOrFail($conversationId);
-        
+
         // Obtener mensajes con información del usuario que envió cada mensaje
         $messages = $conversation->messages()->with('user')->orderBy('created_at', 'asc')->get();
-        
+
         return response()->json($messages);
     }
 
@@ -43,15 +43,15 @@ class ChatController extends Controller
     public function sendMessage(Request $request, $conversationId)
     {
         $user = Auth::user();
-        
+
         // Validar la petición
         $request->validate([
             'content' => 'required|string',
         ]);
-        
+
         // Verificar que el usuario pertenezca a la conversación
         $conversation = $user->conversations()->findOrFail($conversationId);
-        
+
         // Crear el mensaje
         $message = Message::create([
             'conversation_id' => $conversationId,
@@ -59,13 +59,13 @@ class ChatController extends Controller
             'content' => $request->content,
             'read' => false
         ]);
-        
-        // Cargar relación de usuario para incluirla en el broadcast
+
+        // Cargar relación de usuario para incluirla en la respuesta
         $message->load('user');
-        
+
         // Disparar evento de broadcasting
         broadcast(new MessageSent($message))->toOthers();
-        
+
         return response()->json($message);
     }
 
@@ -80,11 +80,11 @@ class ChatController extends Controller
             ->where('name', '!=', 'dfdf')
             ->whereRaw("name NOT LIKE '%dfdf%'")
             ->get();
-            
+
         // Log para debugging
         \Log::info('Users fetched: ' . $users->count());
         \Log::info('Users data: ' . json_encode($users));
-            
+
         return response()->json($users);
     }
 
@@ -94,7 +94,7 @@ class ChatController extends Controller
     public function createConversation(Request $request)
     {
         $user = Auth::user();
-        
+
         // Validar la petición
         $request->validate([
             'user_ids' => 'required|array',
@@ -102,22 +102,22 @@ class ChatController extends Controller
             'name' => 'nullable|string',
             'is_group' => 'boolean'
         ]);
-        
+
         // Verificar que al menos haya otro usuario además del creador
         if (empty($request->user_ids)) {
             return response()->json(['error' => 'Debe seleccionar al menos un usuario para la conversación'], 422);
         }
-        
+
         // Agregar al usuario actual a la lista de participantes
         $userIds = array_unique(array_merge($request->user_ids, [$user->id]));
-        
+
         // Determinar si es grupo o no
         $isGroup = $request->is_group ?? (count($userIds) > 2);
-        
+
         // Si no es grupo y hay solo dos usuarios, verificar si ya existe una conversación entre ellos
         if (!$isGroup && count($userIds) == 2) {
             $otherUserId = $userIds[0] == $user->id ? $userIds[1] : $userIds[0];
-            
+
             // Buscar conversaciones existentes
             $existingConversation = $user->conversations()
                 ->where('is_group', false)
@@ -125,7 +125,7 @@ class ChatController extends Controller
                     $query->where('users.id', $otherUserId);
                 })
                 ->first();
-            
+
             if ($existingConversation) {
                 return response()->json([
                     'message' => 'Ya existe una conversación con este usuario',
@@ -133,16 +133,16 @@ class ChatController extends Controller
                 ]);
             }
         }
-        
+
         // Crear la conversación
         $conversation = Conversation::create([
             'name' => $request->name,
             'is_group' => $isGroup
         ]);
-        
+
         // Asociar usuarios a la conversación
         $conversation->users()->attach($userIds);
-        
+
         // Crear mensaje inicial si existe contenido
         if ($request->has('initial_message')) {
             $message = Message::create([
@@ -151,12 +151,12 @@ class ChatController extends Controller
                 'content' => $request->initial_message,
                 'read' => false
             ]);
-            
+
             // Si hay mensaje inicial, enviarlo por broadcasting
             $message->load('user');
             broadcast(new MessageSent($message))->toOthers();
         }
-        
+
         return response()->json([
             'message' => 'Conversación creada exitosamente',
             'conversation' => $conversation->load('users')

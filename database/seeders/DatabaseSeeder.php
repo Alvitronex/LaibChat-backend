@@ -39,5 +39,41 @@ class DatabaseSeeder extends Seeder
             'phone' => '0987654321',
             'password' => bcrypt('password123')
         ]);
+        $conversation = \App\Models\Conversation::create([
+            'name' => 'Chat de prueba',
+            'is_group' => false
+        ]);
+
+        // Asociar usuarios a la conversación
+        $conversation->users()->attach([1, 2]); // Asociar los usuarios con ID 1 y 2
+
+        // Crear mensajes de ejemplo
+        \App\Models\Message::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => 1,
+            'content' => '¡Hola! ¿Cómo estás?',
+            'read' => true
+        ]);
+
+        \App\Models\Message::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => 2,
+            'content' => 'Muy bien, ¿y tú?',
+            'read' => true
+        ]);
+
+        \App\Models\Message::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => 1,
+            'content' => 'También, gracias. ¿Listo para la reunión?',
+            'read' => true
+        ]);
+
+        \App\Models\Message::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => 2,
+            'content' => 'Sí, en unos minutos me conecto',
+            'read' => false
+        ]);
     }
 }

@@ -8,7 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class Conversation extends Model
 {
     use HasFactory;
+    // En app/Models/Conversation.php
+    protected $with = ['users']; // Cargar automáticamente la relación users
+    protected $appends = ['last_message']; // Añadir last_message a la serialización
 
+    // Método para obtener el último mensaje
+    public function getLastMessageAttribute()
+    {
+        return $this->messages()->with('user')->latest()->first();
+    }
     protected $fillable = ['name', 'is_group'];
 
     /**
